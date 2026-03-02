@@ -11,14 +11,19 @@ import iohinspector
 import polars as pl
 from scipy.stats import rankdata
 import warnings
+import numpy as np
 
 class NG_Evaluator():
-    def __init__(self, optimizer, budget: int = 2000):
+    def __init__(self, optimizer, budget: int = 5000):
         self.alg = optimizer
         self.budget = budget
     
     def __call__(self, func):
-        parametrization = ng.p.Array(shape=(func.meta_data.n_variables,)).set_bounds(-5, 5)
+        if self.alg in ['BFGS', "Cobyla"]:
+            initial_point = np.random.uniform(-5, 5, size=func.meta_data.n_variables)
+            parametrization = ng.p.Array(init=initial_point).set_bounds(-5, 5)
+        else:
+            parametrization = ng.p.Array(shape=func.meta_data.n_variables).set_bounds(-5, 5)
         optimizer = eval(f"{self.alg}")(
             parametrization=parametrization, budget=int(self.budget)
         )
